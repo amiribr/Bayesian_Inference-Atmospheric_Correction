@@ -1,4 +1,3 @@
-import gc
 import pickle
 from forward_model import fwModel 
 import sys
@@ -12,6 +11,7 @@ import numpy as onp
 from scipy.interpolate import RegularGridInterpolator as RGI
 import argparse
 import jax.random as random
+import pandas as pd
 
 NN_path = '../../data/NN_model/best_model_pca_tf_lognorm/'
 scaler_path = '../../data/NN_model/best_model_pca_tf_lognorm_input_scaler.bin'
@@ -85,8 +85,11 @@ if __name__ == "__main__":
         senz = in_out_na_df['senz'].values[i]
 
         priors = [pr, ws, rh, o3, wv, solz, relaz, senz]
-        inputs_ = (([pr, ws, rh, o3, fmf, τ, wv, chlor_a, solz, relaz, senz]))
-        print(inputs_)
+        inputs_ = [pr, ws, rh, o3, fmf, τ, wv, chlor_a, solz, relaz, senz]
+        labels = ['pr', 'ws', 'rh', 'o3', 'fmf', 'τ', 'wv', 'chlor_a', 'solz', 'relaz', 'senz']
+        print('Truth parameters')
+        print(pd.DataFrame(data=onp.atleast_2d(onp.array(inputs_)), columns=labels))
+
         if NN:
             ρ_obs = (forward_model(inputs_))[0:13]
         elif LUT:
