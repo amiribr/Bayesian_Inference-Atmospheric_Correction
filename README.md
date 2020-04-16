@@ -7,7 +7,7 @@ There are currently 4 options to run the inference:
   1. Numpyro with NUTS sampler
   2. PYMC3 with NUTS sampler
   3. PYMC3 with ADVI
-  4. PYMC# with MAP
+  4. PYMC3 with MAP
 
 **Example output:**
 1. Numpyro NUTS inference:
