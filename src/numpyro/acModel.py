@@ -7,7 +7,7 @@ import numpyro
 import numpyro.distributions as dist
 from forward_model import fwModel
 
-NN_path = '../../data/NN_model/best_model_pca_tf_lognorm/'
+NN_path = '../../data/NN_model/NN_fwd_mdl.h5'
 scaler_path = '../../data/NN_model/best_model_pca_tf_lognorm_input_scaler.bin'
 fwd = fwModel(NN_path, scaler_path)
 fwd.load_NN(scaler_path)

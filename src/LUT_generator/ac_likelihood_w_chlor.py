@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 sys.path.insert(
     0, '/Users/aibrahi2/Research/Bayesian_Inference-ML-Atmospheric_Correction/src/LUT_generator/')
@@ -6,7 +8,6 @@ from orm_morel.get_brdf import morel_brdf
 from orm_morel.orm import morel_rrs
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from math import sqrt
 import xarray as xr
 import scipy.optimize as opt
@@ -108,7 +109,8 @@ reflut = xr.open_dataset(reflut_fname)
 # Read in the rayleigh tables
 ray_fname = '/Users/aibrahi2/Research/Bayesian_Inference-ML-Atmospheric_Correction/data/tables/Rayleigh_LUT.nc'
 print("Opening %s" % (ray_fname))
-raylut = xr.open_dataset(ray_fname)
+raylut = xr.open_dataset(ray_fname, autoclose=True)
+# xr.Dataset.close(raylut) 
 taur_p0 = raylut.taur.values
 global ray_grid
 global rayrefI
@@ -120,7 +122,7 @@ rayrefI = np.moveaxis(raylut.I.values.reshape((8, 45, 41, 3 * 16)), 3, 0)
 rayrefQ = np.moveaxis(raylut.Q.values.reshape((8, 45, 41, 3 * 16)), 3, 0)
 rayrefU = np.moveaxis(raylut.U.values.reshape((8, 45, 41, 3 * 16)), 3, 0)
 order = raylut.norder.values
-
+del raylut
 p0 = 1013.25
 
 grid = (reflut.solz.values, reflut.phi.values, reflut.senz.values)
@@ -203,6 +205,7 @@ global tbl_grid
 global dtheta
 tbl_grid = (reflut.humidity.values, reflut.fmf.values, reflut.tau.values)
 dtheta = reflut.dt_theta.values
+
 #@njit
 def aer_trans(rh, fmf_ret, τ_ret, solz, senz):
     tsol_interp = fast_interp(
@@ -303,6 +306,7 @@ def get_toa(theta, solz, relaz, senz):
 
     ρt = (ρr + ρa + Tρg + Tρw) * Tgsol * Tgsen
     # ρt = (ρa + Tρw)
+
     return ρt
 
 def get_toa_no_w(theta, solz, relaz, senz):
@@ -347,4 +351,7 @@ def get_toa_no_w(theta, solz, relaz, senz):
     tsol, tsen = aer_trans(RH, fmf, τa, solz, senz)
     ρt = (ρr + ρa + Tρg) * Tgsol * Tgsen
 
+
     return ρt
+
+

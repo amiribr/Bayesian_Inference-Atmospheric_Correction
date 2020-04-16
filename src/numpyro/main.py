@@ -13,7 +13,7 @@ import argparse
 import jax.random as random
 import pandas as pd
 
-NN_path = '../../data/NN_model/best_model_pca_tf_lognorm/'
+NN_path = '../../data/NN_model/NN_fwd_mdl.h5'
 scaler_path = '../../data/NN_model/best_model_pca_tf_lognorm_input_scaler.bin'
 fwd = fwModel(NN_path, scaler_path)
 fwd.load_NN(scaler_path)
@@ -39,8 +39,6 @@ def run_inference(model, args, rng_key, priors, geom, observations, nir):
 
 
 def main(args, priors, geom, observation, nir):
-
-
     # do inference
     rng_key = random.PRNGKey(0)
     rng_key, rng_key_ = random.split(rng_key)
@@ -67,11 +65,11 @@ if __name__ == "__main__":
     with open('/Users/aibrahi2/Research/atmocor/chlor_based_ret/in_out_na_df.pkl', 'rb') as pickle_file:
         in_out_na_df = pickle.load(pickle_file)
 
-    NN = 1
-    LUT = 0
+    NN = 0
+    LUT = 1
     nir = 0
 
-    for i in range(1):
+    for i in range(500,501):
         pr = in_out_na_df['pr'].values[i]
         ws = in_out_na_df['ws'].values[i]
         rh = in_out_na_df['rh'].values[i]
