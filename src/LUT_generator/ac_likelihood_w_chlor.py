@@ -252,6 +252,8 @@ def get_toa(theta, solz, relaz, senz):
     O3 = theta[3]
     fmf = theta[4]
     τa   = theta[5]
+    cwv = theta[6]
+    chlor_a = theta[7]
     """
     pr = theta[0]
     ws = theta[1]

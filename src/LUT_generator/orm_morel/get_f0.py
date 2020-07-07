@@ -6,10 +6,12 @@ from netCDF4 import Dataset
 # function get_f0.pro
 # [structure of f0 and lambda] = get_f0(avg_wl=[array of wl])
 # and avg_wl=[array of wl] calculated 10 nm average for each wl
+global curr_direc
+curr_direc = '/Users/aibrahi2/Research/Bayesian_Inference-ML-Atmospheric_Correction/src/LUT_generator' + '/orm_morel/'
 
 def get_f0(wvls=None):
 
-    ncfile = Dataset('thuillier2003_f0.nc', 'r')
+    ncfile = Dataset(curr_direc + 'thuillier2003_f0.nc', 'r')
     
     wl = ncfile['wavelength'][:]
     f0 = ncfile['irradiance'][:]

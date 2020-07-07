@@ -1,8 +1,10 @@
 import pickle
 from forward_model import fwModel 
 import sys
+import os
+prj_path = os.environ['BAYES_PRJ']
 sys.path.insert(
-    0, '/Users/aibrahi2/Research/Bayesian_Inference-ML-Atmospheric_Correction/src')
+    0, os.path.join(prj_path,'src'))
 import LUT_generator.ac_likelihood_w_chlor as ac_likelihood_w_chlor
 from acModel import acModel
 import numpyro
@@ -13,14 +15,17 @@ import argparse
 import jax.random as random
 import pandas as pd
 
-NN_path = '../../data/NN_model/NN_fwd_mdl.h5'
-scaler_path = '../../data/NN_model/best_model_pca_tf_lognorm_input_scaler.bin'
+NN_path = os.path.join(prj_path, 'data/NN_model/NN_fwd_mdl.h5')
+scaler_path = os.path.join(
+    prj_path, 'data/NN_model/best_model_pca_tf_lognorm_input_scaler.bin')
+# scaler_path = '../../data/NN_model/best_model_pca_tf_lognorm_input_scaler.bin'
 fwd = fwModel(NN_path, scaler_path)
 fwd.load_NN(scaler_path)
 forward_model = fwd.forward_model
 
 def σ_per_geom(solz, relaz, senz):
-    diff_per_geom = onp.load('../../data/NN_model/diff_per_geom.npy')
+    file_path = os.path.join(prj_path, 'data/NN_model/diff_per_geom.npy')
+    diff_per_geom = onp.load(file_path)
     θ0 = onp.linspace(0, 80, 9)
     ϕ = onp.linspace(0, 180, 19)
     θ = onp.linspace(0, 70, 8)
@@ -61,15 +66,15 @@ if __name__ == "__main__":
     numpyro.set_platform(args.device)
     numpyro.set_host_device_count(args.num_chains)
 
-
-    with open('/Users/aibrahi2/Research/atmocor/chlor_based_ret/in_out_na_df.pkl', 'rb') as pickle_file:
+    pkl_path = os.path.join(prj_path, 'data/in_out_na_df.pkl')
+    with open(pkl_path, 'rb') as pickle_file:
         in_out_na_df = pickle.load(pickle_file)
 
     NN = 0
     LUT = 1
     nir = 0
 
-    for i in range(500,501):
+    for i in range(200,201):
         pr = in_out_na_df['pr'].values[i]
         ws = in_out_na_df['ws'].values[i]
         rh = in_out_na_df['rh'].values[i]

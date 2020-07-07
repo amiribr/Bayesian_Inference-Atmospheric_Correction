@@ -2,9 +2,10 @@
 import pandas as pd
 import argparse
 import sys
+import os
+prj_path = os.environ['BAYES_PRJ']
 sys.path.insert(
-    0, '/Users/aibrahi2/Research/Bayesian_Inference-ML-Atmospheric_Correction/src')
-
+    0, os.path.join(prj_path, 'src'))
 from forward_model import fwModel
 from scipy.interpolate import RegularGridInterpolator as RGI
 from acModel import PyMCModel
@@ -13,15 +14,17 @@ import pickle
 import numpy as np
 import pymc3 as pm
 
-NN_path = '../../data/NN_model/NN_fwd_mdl.h5'
-scaler_path = '../../data/NN_model/best_model_pca_tf_lognorm_input_scaler.bin'
+NN_path = os.path.join(prj_path, 'data/NN_model/NN_fwd_mdl.h5')
+scaler_path = os.path.join(
+    prj_path, 'data/NN_model/best_model_pca_tf_lognorm_input_scaler.bin')
 fwd = fwModel(NN_path, scaler_path)
 fwd.load_NN(scaler_path)
 forward_model = fwd.forward_model
 
 
 def σ_per_geom(solz, relaz, senz):
-    diff_per_geom = np.load('../../data/NN_model/diff_per_geom.npy')
+    file_path = os.path.join(prj_path, 'data/NN_model/diff_per_geom.npy')
+    diff_per_geom = np.load(file_path)
     θ0 = np.linspace(0, 80, 9)
     ϕ = np.linspace(0, 180, 19)
     θ = np.linspace(0, 70, 8)
@@ -67,7 +70,7 @@ def main(observations, args, priors, priors_unc, geom,):
 
 if __name__ == "__main__":
 
-    assert pm.__version__.startswith('3.8')
+    assert pm.__version__.startswith('3.9.2')
 
     parser = argparse.ArgumentParser(
         description="Atmospheric Correction Inference")
@@ -86,14 +89,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    with open('/Users/aibrahi2/Research/atmocor/chlor_based_ret/in_out_na_df.pkl', 'rb') as pickle_file:
+    pkl_path = os.path.join(prj_path, 'data/in_out_na_df.pkl')
+    with open(pkl_path, 'rb') as pickle_file:
         in_out_na_df = pickle.load(pickle_file)
 
-    NN = 1
-    LUT = 0
+
+    NN = 0
+    LUT = 1
     nir = 0
 
-    for i in range(500,501):
+    for i in range(502,503):
         pr = in_out_na_df['pr'].values[i]
         ws = in_out_na_df['ws'].values[i]
         rh = in_out_na_df['rh'].values[i]

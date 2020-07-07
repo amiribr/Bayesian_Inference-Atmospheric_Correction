@@ -75,31 +75,46 @@ def acInferModel(observations, forward_model, fwd_mdl_unc, anc, anc_unc,
     solz = (geom[0])
     relaz = (geom[1])
     senz = (geom[2])
+    
+    const = 3.4
+    # const = 1e-5
 
     pr_min = tt.maximum(pr - pr*pr_unc, inp['pr'].min()).eval()
     pr_max = tt.minimum(pr + pr*pr_unc, inp['pr'].max()).eval()
-    pr_std = (pr_max - pr_min)/3.4
+    pr_std = (pr_max - pr_min)/const
 
     ws_min = tt.maximum(ws - ws*ws_unc, inp['ws'].min()).eval()
     ws_max = tt.minimum(ws + ws*ws_unc, inp['ws'].max()).eval()
-    ws_std = (ws_max - ws_min)/3.4
+    ws_std = (ws_max - ws_min)/const
 
     RH_min = tt.maximum(rh - rh*RH_unc, inp['rh'].min()).eval()
     RH_max = tt.minimum(rh + rh*RH_unc, inp['rh'].max()).eval()
-    rh_std = (RH_max - RH_min)/3.4
+    rh_std = (RH_max - RH_min)/const
 
     O3_min = tt.maximum(o3 - o3*O3_unc, inp['o3'].min()).eval()
     O3_max = tt.minimum(o3 + o3*O3_unc, inp['o3'].max()).eval()
-    O3_std = (O3_max - O3_min)/3.4
+    O3_std = (O3_max - O3_min)/const
 
     wv_min = tt.maximum(wv - wv*wv_unc, inp['wv'].min()).eval()
     wv_max = tt.minimum(wv + wv*wv_unc, inp['wv'].max()).eval()
-    wv_std = (wv_max - wv_min)/3.4
+    wv_std = (wv_max - wv_min)/const
 
+    print('pr_std: ', pr_std, ' ws_std: ', ws_std, ' rh_std: ', rh_std,' o3_std: ', O3_std, ' wv_std: ', wv_std)
+     
     if fwd_mdl_unc.any() == None:
         fwd_mdl_unc = 0.00016
     with pm.Model() as model:
         if prior_dist == 'normal':
+            RH = pm.Normal('RH', mu=rh, sigma=rh_std, dtype = dtype)
+            O3 = pm.Normal('O3', mu=o3, sigma=O3_std, dtype = dtype)
+            Pr = pm.Normal('Pr', mu=pr, sigma=pr_std, dtype = dtype)
+            WS = pm.Normal('WS', mu=ws, sigma=ws_std, dtype = dtype)
+            WV = pm.Normal('WV', mu=wv, sigma=wv_std, dtype = dtype)
+            FMF = pm.Normal('FMF', mu=50, sigma=50, dtype=dtype)
+            τa = pm.Normal('τa', mu=0.2, sigma=1, dtype=dtype)
+            chlor = pm.Normal('chlor', mu=5, sigma=10, dtype=dtype)
+
+        if prior_dist == 'bnormal':
             RH_bound = pm.Bound(pm.Normal, lower=inp['rh'].min(), upper=inp['rh'].max())
             RH = RH_bound('RH', mu=rh, sigma=rh_std, dtype = dtype)
             O3_bound = pm.Bound(pm.Normal, lower=inp['o3'].min(), upper=inp['o3'].max())
@@ -108,7 +123,7 @@ def acInferModel(observations, forward_model, fwd_mdl_unc, anc, anc_unc,
             Pr = pr_bound('Pr', mu=pr, sigma=pr_std, dtype = dtype)
             WS_bound = pm.Bound(pm.Normal, lower=inp['ws'].min(), upper=inp['ws'].max())
             WS = WS_bound('WS', mu=ws, sigma=ws_std, dtype = dtype)
-            WV_bound = pm.Bound(pm.Normal, lower=inp['rh'].min(), upper=inp['rh'].max())
+            WV_bound = pm.Bound(pm.Normal, lower=inp['wv'].min(), upper=inp['wv'].max())
             WV = WV_bound('WV', mu=wv, sigma=wv_std, dtype = dtype)
             # O3 = pm.Normal('O3', mu=o3, sigma=O3_std, dtype=dtype)
             # Pr = pm.Normal('Pr', mu=pr, sigma=pr_std, dtype=dtype)
@@ -194,8 +209,13 @@ class PyMCModel:
 
     def fit_MAP(self):
         with self.model:
-            map_estimate = pm.find_MAP()
-        return map_estimate 
+            map_estimate = pm.find_MAP(method = 'TNC')
+            # Hess = pm.find_hessian(map_estimate, vars=[self.model.RH, 
+            #     self.model.O3, self.model.Pr, self.model.WS, self.model.FMF, 
+            #     self.model.τa, self.model.WV, self.model.chlor], model=self.model)
+            Hess = pm.find_hessian(map_estimate, model=self.model)
+            cov = np.linalg.inv(Hess)
+        return map_estimate, cov
     
     def summary(self, show_feats):
         return pm.summary(self.trace_, varnames=show_feats)
